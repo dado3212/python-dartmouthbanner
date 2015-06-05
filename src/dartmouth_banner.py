@@ -27,7 +27,7 @@ class BannerConnection:
 
 			if 'ticket' in request.url:
 				self.loggedin = True
-				self.session.cookies.et(**cookie) # fakes the javascript
+				self.session.cookies.set(**cookie) # fakes the javascript
 
 				finalRequest = self.session.get(finalLogin, verify=False)
 			else:

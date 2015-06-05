@@ -31,5 +31,5 @@ setup(
 
     packages=find_packages(),
 
-    install_requires=['requests','re']
+    install_requires=['requests'],
 )
