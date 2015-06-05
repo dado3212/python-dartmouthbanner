@@ -1,13 +1,13 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='dartmouth-banner',
+    name='dartmouthbanner',
 
     version='1.0.0',
 
     description='Python API for interacting with Dartmouth Banner',
 
-    url='https://github.com/dado3212/banner_api',
+    url='https://github.com/dado3212/dartmouthbanner',
 
     author='Alex Beals',
     author_email='Alex.Beals.18@dartmouth.edu',
@@ -21,10 +21,7 @@ setup(
 
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3'
     ],
 
     keywords='api dartmouth banner',

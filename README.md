@@ -1,4 +1,4 @@
-# dartmouth_banner
+# dartmouthbanner
 Python API for interacting with Dartmouth Banner.
 
 This utilizes the requests library and some cookie setting to mimic a browser so that you can log in.
@@ -7,7 +7,7 @@ the course ID.  New features will be coming soon.
 
 ### Usage
 
-    from dartmouth_banner import BannerConnection
+    from dartmouthbanner import BannerConnection
     
     connection = BannerConnection()
     connection.login("<username>", "<password>")
@@ -21,4 +21,4 @@ the course ID.  New features will be coming soon.
 
 ### Installation
 
-For now, just download the dartmouth_banner.py file.  I'll make it more easily accessible with a setup.py file in a bit.
+For now, just download the dartmouthbanner.py file.  I'll make it more easily accessible with a setup.py file in a bit.
