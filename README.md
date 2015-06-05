@@ -18,3 +18,7 @@ the course ID.  New features will be coming soon.
     connection.dropCourse(96111)
     
     connection.logout()
+
+### Installation
+
+For now, just download the dartmouth_banner.py file.  I'll make it more easily accessible with a setup.py file in a bit.
