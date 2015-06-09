@@ -1,4 +1,4 @@
-# dartmouthbanner
+# python-dartmouthbanner
 Python API for interacting with Dartmouth Banner.
 
 This utilizes the requests library and some cookie setting to mimic a browser so that you can log in.
