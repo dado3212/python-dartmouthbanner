@@ -20,5 +20,5 @@ setup(
     keywords='api dartmouth banner',
     packages=['dartmouthbanner'],
     long_description=long_description,
-    install_requires=['requests','re']
+    install_requires=['requests']
 )
