@@ -1,15 +1,22 @@
 __author__ = 'Alex Beals'
 
-import requests, re
+import requests, re, urllib, shutil
+from PIL import Image
 requests.packages.urllib3.disable_warnings()
 
 landingPage = 'https://login.dartmouth.edu/cas/login?service=https://banner.dartmouth.edu/banner/groucho/twbkwbis.P_WWWLoginWEBAUTH'
-login = 'https://websso.dartmouth.edu:443/oam/server/auth_cred_submit'
+user = 'https://websso.dartmouth.edu:443/oaam_server/login.do'
+passw = 'https://websso.dartmouth.edu:443/oaam_server/password.do'
 finalLogin = 'https://banner.dartmouth.edu/banner/groucho/twbkwbis.P_ValLoginWEBAUTH'
 
 cookie = {'domain':'banner.dartmouth.edu','name':'TESTID','value':'TESTID','path':'/banner/groucho','secure':False}
 
 redirect = {"Referer": "https://banner.dartmouth.edu/banner/groucho/twbkwbis.P_GenMenu?name=bmenu.Z_UGSMainMenu"}
+browser = {"User-Agent": "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36"}
+
+def write_text(text, string):
+	with open(string + ".html", "w") as f:
+		f.write(text.encode('utf-8'))
 
 class BannerConnection:
 	def __init__(self):
@@ -22,21 +29,48 @@ class BannerConnection:
 	# Attempts to log you into Banner.  If it works, the self variable 'loggedin' is set to True.  Else, it's set to False.
 	def login(self, username, password):
 		if not self.loggedin:
-			payload={'username':username,'password':password,'aSubmit':'Continue'}
-			request = self.session.post(login, data=payload, verify=False)
+			payload={'userid':username,'clientOffset':-4}
+			request = self.session.post(user, data=payload, verify=False)
+			if 'login.do' in request.url:
+				payload={'fk':re.search("name=\"fk\" value=\"(.*?)\"",request.text).group(1),'Bharosa_Password_PadDataField':password}
+				request = self.session.post(passw, data=payload, verify=False)
 
-			if 'ticket' in request.url:
-				self.loggedin = True
-				self.session.cookies.set(**cookie) # fakes the javascript
+				# Handles the challenge question
+				if 'challenge' in request.url:
+					print "Challenge!"
+					question_url = "https://websso.dartmouth.edu/oaam_server/" + re.search("bImgLoc:\"(.*?)\"",request.text).group(1)
 
-				finalRequest = self.session.get(finalLogin, verify=False)
+					# Download the challenge question as an image, and open it
+					response = self.session.get(question_url, stream=True)
+					with open("challenge.png", "wb") as out_file:
+						shutil.copyfileobj(response.raw, out_file)
+
+					i = Image.open("challenge.png")
+					i.show()
+
+					ans = raw_input("What's the answer?  ")
+					i.close()
+
+					# Handle response
+					payload = {'Bharosa_Challenge_PadDataField':ans,'fk':re.search("name=\"fk\" value=\"(.*?)\"",request.text).group(1),"showView":"submitAnswer"}
+					request = self.session.post(request.url, data=payload, verify=False)
+					if 'ticket' in request.url:
+						self.loggedin = True
+						self.session.cookies.set(**cookie) # Fakes the javascript
+						finalRequest = self.session.get(finalLogin, verify=False)
+					else:
+						self.loggedin = False
+				else:
+					self.loggedin = True
+					self.session.cookies.set(**cookie) # Fakes the javascript
+					finalRequest = self.session.get(finalLogin, verify=False)
 			else:
 				self.loggedin = False
 
 	# Logs you out of banner.
 	def logout(self):
 		if self.loggedin:
-			self.__init__() # reinitialize
+			self.__init__() # Reinitialize
 
 	# Returns your GPA as a float, or False if you're not logged in
 	def gpa(self):
@@ -66,12 +100,14 @@ class BannerConnection:
 	#	You don't satisfy the banner prerequisites : 4
 	#	The enrollment limit is reached : 5
 	#	You're already in the class : 6
-	#	Misc error : 7
+	#	Need instructor permission : 7
+	#	Misc error : 8
 	def addCourse(self, courseID):
 		timetable = 'https://banner.dartmouth.edu/banner/groucho/zp_web_add_drop.pz_timetable'
 		if self.loggedin:
 			page = self.session.get(timetable, headers=redirect)
 			term = re.search("<INPUT TYPE = \"radio\".*?ID=\"(.*?)\".*?CHECKED",page.text).group(1)
+			term = "201606"
 			page2 = self.session.post(timetable, headers=redirect, data={"term":term})
 
 			classData = "term_in=" + term + "&RSTS_IN=DUMMY&assoc_term_in=DUMMY&CRN_IN=DUMMY&start_date_in=DUMMY&end_date_in=DUMMY&SUBJ=DUMMY&CRSE=DUMMY&SEC=DUMMY&LEVL=DUMMY&CRED=DUMMY&GMOD=DUMMY&TITLE=DUMMY&MESG=DUMMY&REG_BTN=DUMMY&RSTS_IN=RW&CRN_IN=" + str(courseID) + "&assoc_term_in=&start_date_in=&end_date_in=&regs_row=0&wait_row=0&add_row=1&REG_BTN=Submit+Changes"
@@ -87,8 +123,10 @@ class BannerConnection:
 				return 5 # filled up
 			elif "DUPLICATE " in submit.text:
 				return 6 # already enrolled
+			elif "Instructor Permission Needed" in submit.text:
+				return 7
 			elif "Registration Add Errors" in submit.text:
-				return 7 # misc error
+				return 8 # misc error
 			else:
 				return 1 #success!
 		else:
@@ -104,6 +142,7 @@ class BannerConnection:
 		if self.loggedin:
 			page = self.session.get(timetable, headers=redirect)
 			term = re.search("<INPUT TYPE = \"radio\".*?ID=\"(.*?)\".*?CHECKED",page.text).group(1)
+			term = "201606"
 			page2 = self.session.post(timetable, headers=redirect, data={"term":term})
 
 			classData = "term_in=" + term + "&RSTS_IN=DUMMY&assoc_term_in=DUMMY&CRN_IN=DUMMY&start_date_in=DUMMY&end_date_in=DUMMY&SUBJ=DUMMY&CRSE=DUMMY&SEC=DUMMY&LEVL=DUMMY&CRED=DUMMY&GMOD=DUMMY&TITLE=DUMMY&MESG=DUMMY&REG_BTN=DUMMY&MESG=DUMMY&RSTS_IN=DW&assoc_term_in=" + term + "&CRN_IN=" + str(courseID) + "&regs_row=1&wait_row=0&add_row=0&REG_BTN=Submit+Changes"

@@ -4,7 +4,7 @@ long_description="""This API allows Python programs to easily interact with Dart
 
 setup(
     name='python-dartmouthbanner',
-    version='1.0',
+    version='1.1',
     description='Python API for interacting with Dartmouth Banner',
     url='https://github.com/dado3212/python-dartmouthbanner',
     author='Alex Beals',
@@ -20,5 +20,5 @@ setup(
     keywords='api dartmouth banner',
     packages=['dartmouthbanner'],
     long_description=long_description,
-    install_requires=['requests']
+    install_requires=['requests', 'urllib', 'shutil', 'Pillow']
 )
